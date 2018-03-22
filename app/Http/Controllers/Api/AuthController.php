@@ -42,11 +42,9 @@ class AuthController extends Controller
         }
     }
 
-    public function logout()
+    public function logout(Request $request, $id)
     {
-        
-        User::where('email', $user)
-            ->update(['token' => null]);
+        User::where('email', $id)->update(['token' => null]);
 
         return response()->json(['logout' => '1']);
     }
