@@ -9,11 +9,6 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // $auth = $request->header('Authorization');
-        // $auth = str_replace('Basic ','', $auth);
-        // $auth = base64_decode($auth);
-        // $user = explode(':', $auth);
-
         $user = $request->get('user', null); 
 
         $user['password'] = hash('sha1', $user['password']);
@@ -34,18 +29,16 @@ class AuthController extends Controller
         return response()->json($user);
     }
 
-    public function checkToken()
+    public function me(Request $request)
     {
-        $email = $request->get('email', null);
-        $token = $request->get('token', null);
-
-        $exist = User::where('email', $email)
-            ->where('token', $token)->count();
+        $token = $request->header('Authorization');
         
-        if ( 1 === $exist ) {
-            return response()->json(['logged' => '1']);
+        $user = User::select('email', 'token', 'secret')->where('token', $token)->first();
+        
+        if ( !is_null($user) && 1 === $user->count() ) {
+              return response()->json($user);
         } else {
-            return response()->json(['logged' => '0']);
+            return response()->json(['err' => true]);
         }
     }
 

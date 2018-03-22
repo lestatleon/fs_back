@@ -18,11 +18,13 @@ class InvitationController extends Controller
     public function create(Request $request) 
     {
         $email = $request->get("email");
+        $message = $request->get("message");
 
         $exist = Invitation::where('email', $email)->count();
         if ( 0 === $exist ) {
             $invitation = new Invitation();
             $invitation->email = $email;
+            $invitation->message = $message;
             $key = hash('md5', $email.date('Y-m-d H:m:s'));
             $invitation->key = $key;
             $invitation->save();
@@ -42,24 +44,22 @@ class InvitationController extends Controller
 
         $status = $request->get('status', $invitation->status_id);
 
+        if ( $invitation->status_id == 1 ) {
+          $date = date('Y-m-d H:m:s');
+        } else {
+          $date = $invitation->viewed_on;
+        }
+
         Invitation::where('key', $id)
-            ->update(['status_id' => $status]);
+            ->update(['status_id' => $status, 'viewed_on' => $date]);
 
         return response()->json($invitation)->setStatusCode(201);
     }
 
-    public function viewed(Request $request, $id)
-    {
-        Invitation::where('key', $id)
-            ->update(['status_id' => 2]);
-        
-        return response()->json(['status_id' => 2])->setStatusCode(200);
-    }
-
     public function get(Request $request, $id) 
     {
-        $invitation = Invitation::where('key', $id)
-        ->where('status_id', '1')->first();
+        $invitation = Invitation::select('email', 'message', 'status_id', 'key')
+        ->where('key', $id)->first();
 
         return response()->json($invitation)->setStatusCode(200);
     }
